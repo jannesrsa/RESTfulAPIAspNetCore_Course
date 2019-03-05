@@ -243,3 +243,4 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+/exercisefiles/asp-dot-net-core-restful-api-building
