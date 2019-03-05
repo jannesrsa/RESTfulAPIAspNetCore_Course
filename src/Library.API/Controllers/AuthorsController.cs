@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Library.API.Helpers;
+﻿using System.Collections.Generic;
+using AutoMapper;
 using Library.API.Models;
 using Library.API.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +9,7 @@ namespace Library.API.Controllers
     [Route("api/authors")]
     public class AuthorsController : Controller
     {
-        readonly ILibraryRepository _libraryRepository;
+        private readonly ILibraryRepository _libraryRepository;
 
         public AuthorsController(ILibraryRepository libraryRepository)
         {
@@ -24,17 +21,7 @@ namespace Library.API.Controllers
         {
             var authorsFromRep = _libraryRepository.GetAuthors();
 
-            var authors = new List<AuthorDto>();
-            foreach (var author in authorsFromRep)
-            {
-                authors.Add(new AuthorDto()
-                {
-                    Id = author.Id,
-                    Name = $"{author.FirstName} {author.LastName}",
-                    Genre = author.Genre,
-                    Age = author.DateOfBirth.GetCurrentAge()
-                });
-            }
+            var authors = Mapper.Map<IEnumerable<AuthorDto>>(authorsFromRep);
 
             return new JsonResult(authors);
         }
