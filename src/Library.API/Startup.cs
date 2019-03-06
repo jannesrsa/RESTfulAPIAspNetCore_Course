@@ -67,6 +67,7 @@ namespace Library.API
             {
                 setupAction.ReturnHttpNotAcceptable = true;
                 setupAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+                setupAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter(new MvcOptions()));
             })
             .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
