@@ -91,9 +91,7 @@ namespace Library.API.Controllers
                 return NotFound();
             }
 
-            var bookEntity = Mapper.Map<Entities.Book>(bookFromRep);
-
-            _libraryRepository.DeleteBook(bookEntity);
+            _libraryRepository.DeleteBook(bookFromRep);
 
             if (!_libraryRepository.Save())
             {
