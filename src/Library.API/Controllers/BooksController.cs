@@ -81,5 +81,26 @@ namespace Library.API.Controllers
                 bookToReturn
             );
         }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteBookForAuthor(Guid authorId, Guid id)
+        {
+            var bookFromRep = _libraryRepository.GetBookForAuthor(authorId, id);
+            if (bookFromRep == null)
+            {
+                return NotFound();
+            }
+
+            var bookEntity = Mapper.Map<Entities.Book>(bookFromRep);
+
+            _libraryRepository.DeleteBook(bookEntity);
+
+            if (!_libraryRepository.Save())
+            {
+                throw new Exception("Deleting a book failed on save.");
+            }
+
+            return NoContent();
+        }
     }
 }
