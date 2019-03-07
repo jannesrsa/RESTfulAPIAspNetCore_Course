@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AutoMapper;
 using Library.API.Models;
 using Library.API.Services;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Library.API.Controllers
@@ -101,6 +102,43 @@ namespace Library.API.Controllers
             return Ok(books);
         }
 
+        [HttpPatch("{id}")]
+        public IActionResult PartiallyUpdateBookForAuthor(Guid authorId, Guid id, [FromBody] JsonPatchDocument<BookForUpdateDto> patchDoc)
+        {
+            if (patchDoc == null)
+            {
+                return BadRequest();
+            }
+
+            if (!_libraryRepository.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+
+            var bookForAuthorFromRepo = _libraryRepository.GetBookForAuthor(authorId, id);
+            if (bookForAuthorFromRepo == null)
+            {
+                return NotFound();
+            }
+
+            var bookToPatch = Mapper.Map<BookForUpdateDto>(bookForAuthorFromRepo);
+
+            patchDoc.ApplyTo(bookToPatch);
+
+            // Add Validation
+
+            Mapper.Map(bookToPatch, bookForAuthorFromRepo);
+
+            _libraryRepository.UpdateBookForAuthor(bookForAuthorFromRepo);
+
+            if (!_libraryRepository.Save())
+            {
+                throw new Exception("Update a book failed on save.");
+            }
+
+            return NoContent();
+        }
+
         [HttpPut("{id}")]
         public IActionResult UpdateBook(Guid authorId, Guid id, [FromBody] BookForCreationDto book)
         {
@@ -129,8 +167,8 @@ namespace Library.API.Controllers
                 var bookToReturn = Mapper.Map<BookDto>(bookEntity);
 
                 return CreatedAtRoute(
-                    "GetBookForAuthor", 
-                    new { id = bookToReturn.Id }, 
+                    "GetBookForAuthor",
+                    new { id = bookToReturn.Id },
                     bookToReturn);
             }
             else
