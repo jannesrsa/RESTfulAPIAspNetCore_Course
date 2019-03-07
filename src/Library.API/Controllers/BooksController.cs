@@ -117,21 +117,36 @@ namespace Library.API.Controllers
             var bookEntity = _libraryRepository.GetBookForAuthor(authorId, id);
             if (bookEntity == null)
             {
-                return NotFound();
+                bookEntity = Mapper.Map<Entities.Book>(book);
+                bookEntity.Id = id;
+
+                _libraryRepository.AddBookForAuthor(authorId, bookEntity);
+                if (!_libraryRepository.Save())
+                {
+                    throw new Exception("Upserting a book failed on save.");
+                }
+
+                var bookToReturn = Mapper.Map<BookDto>(bookEntity);
+
+                return CreatedAtRoute(
+                    "GetBookForAuthor", 
+                    new { id = bookToReturn.Id }, 
+                    bookToReturn);
             }
-
-            Mapper.Map(book, bookEntity);
-
-            _libraryRepository.UpdateBookForAuthor(bookEntity);
-
-            if (!_libraryRepository.Save())
+            else
             {
-                throw new Exception("Creating a book failed on save.");
+                Mapper.Map(book, bookEntity);
+                _libraryRepository.UpdateBookForAuthor(bookEntity);
+
+                if (!_libraryRepository.Save())
+                {
+                    throw new Exception("Update a book failed on save.");
+                }
+
+                var bookToReturn = Mapper.Map<BookDto>(bookEntity);
+
+                return NoContent();
             }
-
-            var bookToReturn = Mapper.Map<BookDto>(bookEntity);
-
-            return NoContent();
         }
     }
 }
