@@ -17,40 +17,6 @@ namespace Library.API.Controllers
             _libraryRepository = libraryRepository;
         }
 
-        [HttpGet("{id}", Name = "GetBookForAuthor")]
-        public IActionResult GetBookForAuthor(Guid authorId, Guid id)
-        {
-            if (!_libraryRepository.AuthorExists(authorId))
-            {
-                return NotFound();
-            }
-
-            var bookFromRep = _libraryRepository.GetBookForAuthor(authorId, id);
-            if (bookFromRep == null)
-            {
-                return NotFound();
-            }
-
-            var book = Mapper.Map<BookDto>(bookFromRep);
-
-            return Ok(book);
-        }
-
-        [HttpGet]
-        public IActionResult GetBooksForAuthor(Guid authorId)
-        {
-            if (!_libraryRepository.AuthorExists(authorId))
-            {
-                return NotFound();
-            }
-
-            var booksFromRep = _libraryRepository.GetBooksForAuthor(authorId);
-
-            var books = Mapper.Map<IEnumerable<BookDto>>(booksFromRep);
-
-            return Ok(books);
-        }
-
         [HttpPost]
         public IActionResult CreateBook(Guid authorId, [FromBody] BookForCreationDto book)
         {
@@ -97,6 +63,73 @@ namespace Library.API.Controllers
             {
                 throw new Exception("Deleting a book failed on save.");
             }
+
+            return NoContent();
+        }
+
+        [HttpGet("{id}", Name = "GetBookForAuthor")]
+        public IActionResult GetBookForAuthor(Guid authorId, Guid id)
+        {
+            if (!_libraryRepository.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+
+            var bookFromRep = _libraryRepository.GetBookForAuthor(authorId, id);
+            if (bookFromRep == null)
+            {
+                return NotFound();
+            }
+
+            var book = Mapper.Map<BookDto>(bookFromRep);
+
+            return Ok(book);
+        }
+
+        [HttpGet]
+        public IActionResult GetBooksForAuthor(Guid authorId)
+        {
+            if (!_libraryRepository.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+
+            var booksFromRep = _libraryRepository.GetBooksForAuthor(authorId);
+
+            var books = Mapper.Map<IEnumerable<BookDto>>(booksFromRep);
+
+            return Ok(books);
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateBook(Guid authorId, Guid id, [FromBody] BookForCreationDto book)
+        {
+            if (book == null)
+            {
+                return BadRequest();
+            }
+
+            if (!_libraryRepository.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+
+            var bookEntity = _libraryRepository.GetBookForAuthor(authorId, id);
+            if (bookEntity == null)
+            {
+                return NotFound();
+            }
+
+            Mapper.Map(book, bookEntity);
+
+            _libraryRepository.UpdateBookForAuthor(bookEntity);
+
+            if (!_libraryRepository.Save())
+            {
+                throw new Exception("Creating a book failed on save.");
+            }
+
+            var bookToReturn = Mapper.Map<BookDto>(bookEntity);
 
             return NoContent();
         }
