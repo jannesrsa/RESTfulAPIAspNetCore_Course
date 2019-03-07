@@ -118,7 +118,24 @@ namespace Library.API.Controllers
             var bookForAuthorFromRepo = _libraryRepository.GetBookForAuthor(authorId, id);
             if (bookForAuthorFromRepo == null)
             {
-                return NotFound();
+                var bookDto = new BookForUpdateDto();
+                patchDoc.ApplyTo(bookDto);
+
+                bookForAuthorFromRepo = Mapper.Map<Entities.Book>(bookDto);
+                bookForAuthorFromRepo.Id = id;
+
+                _libraryRepository.AddBookForAuthor(authorId, bookForAuthorFromRepo);
+                if (!_libraryRepository.Save())
+                {
+                    throw new Exception("Update a book failed on save.");
+                }
+
+                var bookToReturn = Mapper.Map<BookDto>(bookForAuthorFromRepo);
+
+                return CreatedAtRoute(
+                    "GetBookForAuthor",
+                    new { authorId, id },
+                    bookToReturn);
             }
 
             var bookToPatch = Mapper.Map<BookForUpdateDto>(bookForAuthorFromRepo);
