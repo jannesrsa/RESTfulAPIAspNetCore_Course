@@ -19,14 +19,14 @@ namespace Library.API.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateBook(Guid authorId, [FromBody] BookForCreationDto book)
+        public IActionResult CreateBook(Guid authorId, [FromBody] BookForCreationDto bookForCreationDto)
         {
-            if (book == null)
+            if (bookForCreationDto == null)
             {
                 return BadRequest();
             }
 
-            if (book.Description == book.Title)
+            if (bookForCreationDto.Description == bookForCreationDto.Title)
             {
                 ModelState.AddModelError(nameof(BookForCreationDto), "The provided description should be different from the title.");
             }
@@ -41,7 +41,7 @@ namespace Library.API.Controllers
                 return NotFound();
             }
 
-            var bookEntity = Mapper.Map<Entities.Book>(book);
+            var bookEntity = Mapper.Map<Entities.Book>(bookForCreationDto);
 
             _libraryRepository.AddBookForAuthor(authorId, bookEntity);
 
@@ -50,12 +50,12 @@ namespace Library.API.Controllers
                 throw new Exception("Creating a book failed on save.");
             }
 
-            var bookToReturn = Mapper.Map<BookDto>(bookEntity);
+            var bookDtoToReturn = Mapper.Map<BookDto>(bookEntity);
 
             return CreatedAtRoute(
                 "GetBookForAuthor",
-                new { id = bookToReturn.Id },
-                bookToReturn
+                new { id = bookDtoToReturn.Id },
+                bookDtoToReturn
             );
         }
 
@@ -113,9 +113,9 @@ namespace Library.API.Controllers
         }
 
         [HttpPatch("{id}")]
-        public IActionResult PartiallyUpdateBookForAuthor(Guid authorId, Guid id, [FromBody] JsonPatchDocument<BookForUpdateDto> patchDoc)
+        public IActionResult PartiallyUpdateBookForAuthor(Guid authorId, Guid id, [FromBody] JsonPatchDocument<BookForUpdateDto> jsonPatchDocument)
         {
-            if (patchDoc == null)
+            if (jsonPatchDocument == null)
             {
                 return BadRequest();
             }
@@ -129,7 +129,7 @@ namespace Library.API.Controllers
             if (bookForAuthorFromRepo == null)
             {
                 var bookDto = new BookForUpdateDto();
-                patchDoc.ApplyTo(bookDto);
+                jsonPatchDocument.ApplyTo(bookDto);
 
                 bookForAuthorFromRepo = Mapper.Map<Entities.Book>(bookDto);
                 bookForAuthorFromRepo.Id = id;
@@ -150,7 +150,7 @@ namespace Library.API.Controllers
 
             var bookToPatch = Mapper.Map<BookForUpdateDto>(bookForAuthorFromRepo);
 
-            patchDoc.ApplyTo(bookToPatch);
+            jsonPatchDocument.ApplyTo(bookToPatch);
 
             // Add Validation
 
@@ -167,11 +167,21 @@ namespace Library.API.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateBook(Guid authorId, Guid id, [FromBody] BookForCreationDto book)
+        public IActionResult UpdateBook(Guid authorId, Guid id, [FromBody] BookForUpdateDto bookForUpdateDto)
         {
-            if (book == null)
+            if (bookForUpdateDto == null)
             {
                 return BadRequest();
+            }
+
+            if (bookForUpdateDto.Description == bookForUpdateDto.Title)
+            {
+                ModelState.AddModelError(nameof(BookForUpdateDto), "The provided description should be different from the title.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return UnprocessableEntity(ModelState);
             }
 
             if (!_libraryRepository.AuthorExists(authorId))
@@ -182,7 +192,7 @@ namespace Library.API.Controllers
             var bookEntity = _libraryRepository.GetBookForAuthor(authorId, id);
             if (bookEntity == null)
             {
-                bookEntity = Mapper.Map<Entities.Book>(book);
+                bookEntity = Mapper.Map<Entities.Book>(bookForUpdateDto);
                 bookEntity.Id = id;
 
                 _libraryRepository.AddBookForAuthor(authorId, bookEntity);
@@ -191,24 +201,22 @@ namespace Library.API.Controllers
                     throw new Exception("Upserting a book failed on save.");
                 }
 
-                var bookToReturn = Mapper.Map<BookDto>(bookEntity);
+                var bookDtoToReturn = Mapper.Map<BookDto>(bookEntity);
 
                 return CreatedAtRoute(
                     "GetBookForAuthor",
-                    new { id = bookToReturn.Id },
-                    bookToReturn);
+                    new { id = bookDtoToReturn.Id },
+                    bookDtoToReturn);
             }
             else
             {
-                Mapper.Map(book, bookEntity);
+                Mapper.Map(bookForUpdateDto, bookEntity);
                 _libraryRepository.UpdateBookForAuthor(bookEntity);
 
                 if (!_libraryRepository.Save())
                 {
                     throw new Exception("Update a book failed on save.");
                 }
-
-                var bookToReturn = Mapper.Map<BookDto>(bookEntity);
 
                 return NoContent();
             }
