@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AutoMapper;
+using Library.API.Helpers;
 using Library.API.Models;
 using Library.API.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ namespace Library.API.Controllers
     [Route("api/authors")]
     public class AuthorsController : Controller
     {
+        private const int maxAuthorPageSize = 20;
         private readonly ILibraryRepository _libraryRepository;
 
         public AuthorsController(ILibraryRepository libraryRepository)
@@ -17,28 +19,15 @@ namespace Library.API.Controllers
             _libraryRepository = libraryRepository;
         }
 
-        [HttpGet("{id}", Name = "GetAuthor")]
-        public IActionResult GetAuthor(Guid id)
+        [HttpPost("{id}")]
+        public IActionResult BlockAuthorCreation(Guid id)
         {
-            var authorFromRep = _libraryRepository.GetAuthor(id);
-            if (authorFromRep == null)
+            if (_libraryRepository.AuthorExists(id))
             {
-                return NotFound();
+                return Conflict();
             }
 
-            var author = Mapper.Map<AuthorDto>(authorFromRep);
-
-            return Ok(author);
-        }
-
-        [HttpGet]
-        public IActionResult GetAuthors()
-        {
-            var authorsFromRep = _libraryRepository.GetAuthors();
-
-            var authors = Mapper.Map<IEnumerable<AuthorDto>>(authorsFromRep);
-
-            return Ok(authors);
+            return NotFound();
         }
 
         [HttpPost]
@@ -67,17 +56,6 @@ namespace Library.API.Controllers
             );
         }
 
-        [HttpPost("{id}")]
-        public IActionResult BlockAuthorCreation(Guid id)
-        {
-            if (_libraryRepository.AuthorExists(id))
-            {
-                return Conflict();
-            }
-
-            return NotFound();
-        }
-
         [HttpDelete("{id}")]
         public IActionResult DeleteAuthor(Guid id)
         {
@@ -94,6 +72,30 @@ namespace Library.API.Controllers
             }
 
             return NoContent();
+        }
+
+        [HttpGet("{id}", Name = "GetAuthor")]
+        public IActionResult GetAuthor(Guid id)
+        {
+            var authorFromRep = _libraryRepository.GetAuthor(id);
+            if (authorFromRep == null)
+            {
+                return NotFound();
+            }
+
+            var author = Mapper.Map<AuthorDto>(authorFromRep);
+
+            return Ok(author);
+        }
+
+        [HttpGet]
+        public IActionResult GetAuthors(AuthorsResourceParameters authorsResourceParameters)
+        {
+            var authorsFromRep = _libraryRepository.GetAuthors(authorsResourceParameters);
+
+            var authors = Mapper.Map<IEnumerable<AuthorDto>>(authorsFromRep);
+
+            return Ok(authors);
         }
     }
 }
