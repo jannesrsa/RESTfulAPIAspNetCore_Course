@@ -14,11 +14,13 @@ namespace Library.API.Controllers
     {
         private readonly ILibraryRepository _libraryRepository;
         private readonly ILogger<BooksController> _logger;
+        private readonly IUrlHelper _urlHelper;
 
-        public BooksController(ILibraryRepository libraryRepository, ILogger<BooksController> logger)
+        public BooksController(ILibraryRepository libraryRepository, ILogger<BooksController> logger, IUrlHelper urlHelper)
         {
             _libraryRepository = libraryRepository;
             _logger = logger;
+            _urlHelper = urlHelper;
         }
 
         [HttpPost]

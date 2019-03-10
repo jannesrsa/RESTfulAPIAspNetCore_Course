@@ -1,8 +1,8 @@
-﻿using Library.API.Entities;
-using Library.API.Helpers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Library.API.Entities;
+using Library.API.Helpers;
 
 namespace Library.API.Services
 {
@@ -65,13 +65,22 @@ namespace Library.API.Services
             return _context.Authors.FirstOrDefault(a => a.Id == authorId);
         }
 
-        public IEnumerable<Author> GetAuthors(AuthorsResourceParameters authorsResourceParameters)
+        public PagedList<Author> GetAuthors(AuthorsResourceParameters authorsResourceParameters)
         {
-            return _context.Authors
+            var collectionBeforePaging = _context.Authors
                 .OrderBy(a => a.FirstName)
                 .ThenBy(a => a.LastName)
-                .Skip(authorsResourceParameters.PageSize * (authorsResourceParameters.PageNumber - 1))
-                .Take(authorsResourceParameters.PageSize);
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(authorsResourceParameters.Genre))
+            {
+                collectionBeforePaging = collectionBeforePaging
+                    .Where(a => a.Genre.Equals(authorsResourceParameters.Genre.Trim(), StringComparison.InvariantCultureIgnoreCase));
+            }
+
+            return PagedList<Author>.Create(collectionBeforePaging,
+                authorsResourceParameters.PageNumber,
+                authorsResourceParameters.PageSize);
         }
 
         public IEnumerable<Author> GetAuthors(IEnumerable<Guid> authorIds)
@@ -80,11 +89,6 @@ namespace Library.API.Services
                 .OrderBy(a => a.FirstName)
                 .OrderBy(a => a.LastName)
                 .ToList();
-        }
-
-        public void UpdateAuthor(Author author)
-        {
-            // no code in this implementation
         }
 
         public Book GetBookForAuthor(Guid authorId, Guid bookId)
@@ -99,14 +103,19 @@ namespace Library.API.Services
                         .Where(b => b.AuthorId == authorId).OrderBy(b => b.Title).ToList();
         }
 
-        public void UpdateBookForAuthor(Book book)
+        public bool Save()
+        {
+            return (_context.SaveChanges() >= 0);
+        }
+
+        public void UpdateAuthor(Author author)
         {
             // no code in this implementation
         }
 
-        public bool Save()
+        public void UpdateBookForAuthor(Book book)
         {
-            return (_context.SaveChanges() >= 0);
+            // no code in this implementation
         }
     }
 }
