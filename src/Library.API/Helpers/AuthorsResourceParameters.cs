@@ -5,6 +5,7 @@
         private const int maxPageSize = 20;
         private int _pageSize = 10;
 
+        public string Fields { get; set; }
         public string Genre { get; set; }
 
         public string OrderBy { get; set; } = "Name";

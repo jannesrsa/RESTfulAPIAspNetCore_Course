@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Serialization;
 
 namespace Library.API
 {
@@ -89,6 +90,10 @@ namespace Library.API
                 setupAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
                 setupAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter(new MvcOptions()));
             })
+            .AddJsonOptions(options =>
+            {
+                options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            })
             .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             // register the DbContext on the container, getting the connection string from
@@ -109,6 +114,8 @@ namespace Library.API
             });
 
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
+
+            services.AddTransient<ITypeHelperService, TypeHelperService>();
         }
     }
 }
