@@ -126,24 +126,29 @@ namespace Library.API.Controllers
                     return _urlHelper.Link("GetAuthors",
                         new
                         {
+                            orderBy = authorsResourceParameters.OrderBy,
                             searchQuery = authorsResourceParameters.SearchQuery,
                             genre = authorsResourceParameters.Genre,
                             pageNumber = authorsResourceParameters.PageNumber - 1,
-                            pageSize = authorsResourceParameters.PageSize
+                            pageSize = authorsResourceParameters.PageSize,
                         });
+
                 case ResourceUriType.NextPage:
                     return _urlHelper.Link("GetAuthors",
                          new
                          {
+                             orderBy = authorsResourceParameters.OrderBy,
                              searchQuery = authorsResourceParameters.SearchQuery,
                              genre = authorsResourceParameters.Genre,
                              pageNumber = authorsResourceParameters.PageNumber + 1,
                              pageSize = authorsResourceParameters.PageSize
                          });
+
                 default:
                     return _urlHelper.Link("GetAuthors",
                         new
                         {
+                            orderBy = authorsResourceParameters.OrderBy,
                             searchQuery = authorsResourceParameters.SearchQuery,
                             genre = authorsResourceParameters.Genre,
                             pageNumber = authorsResourceParameters.PageNumber,

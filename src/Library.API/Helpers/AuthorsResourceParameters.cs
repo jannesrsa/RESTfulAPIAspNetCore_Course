@@ -7,6 +7,8 @@
 
         public string Genre { get; set; }
 
+        public string OrderBy { get; set; } = "Name";
+
         public int PageNumber { get; set; } = 1;
 
         public int PageSize

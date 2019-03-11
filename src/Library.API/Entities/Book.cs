@@ -6,7 +6,7 @@ namespace Library.API.Entities
 {
     public class Book
     {
-        [Key]       
+        [Key]
         public Guid Id { get; set; }
 
         [Required]
