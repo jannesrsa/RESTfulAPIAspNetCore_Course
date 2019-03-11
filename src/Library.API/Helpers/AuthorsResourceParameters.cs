@@ -5,6 +5,8 @@
         private const int maxPageSize = 20;
         private int _pageSize = 10;
 
+        public string Genre { get; set; }
+
         public int PageNumber { get; set; } = 1;
 
         public int PageSize
@@ -19,7 +21,6 @@
             }
         }
 
-        public string Genre { get; set; }
-
+        public string SearchQuery { get; set; }
     }
 }
