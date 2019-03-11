@@ -104,7 +104,7 @@ namespace Library.API.Controllers
             return Ok(CreateLinksForBook(book));
         }
 
-        [HttpGet]
+        [HttpGet(Name = "GetBooksForAuthor")]
         public IActionResult GetBooksForAuthor(Guid authorId)
         {
             if (!_libraryRepository.AuthorExists(authorId))
@@ -116,7 +116,10 @@ namespace Library.API.Controllers
 
             var books = Mapper.Map<IEnumerable<BookDto>>(booksFromRep);
 
-            return Ok(books.Select(book => CreateLinksForBook(book)));
+            return Ok(CreateLinksForBook(new LinkedCollectionResrouceWrapperDto<BookDto>()
+            {
+                Value = books.Select(book => CreateLinksForBook(book))
+            }));
         }
 
         [HttpPatch("{id}", Name = "PartiallyUpdateBookForAuthor")]
@@ -282,6 +285,18 @@ namespace Library.API.Controllers
             });
 
             return book;
+        }
+
+        private LinkedCollectionResrouceWrapperDto<BookDto> CreateLinksForBook(LinkedCollectionResrouceWrapperDto<BookDto> booksWrapper)
+        {
+            booksWrapper.Links.Add(new LinkDto
+            {
+                Href = _urlHelper.Link("GetBooksForAuthor", new { }),
+                Rel = "self",
+                Method = "GET"
+            });
+
+            return booksWrapper;
         }
     }
 }
