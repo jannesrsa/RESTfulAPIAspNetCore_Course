@@ -116,7 +116,8 @@ namespace Library.API.Controllers
         }
 
         [HttpGet(Name = "GetAuthors")]
-        public IActionResult GetAuthors(AuthorsResourceParameters authorsResourceParameters)
+        public IActionResult GetAuthors(AuthorsResourceParameters authorsResourceParameters,
+            [FromHeader(Name = "Accept")] string mediaType)
         {
             if (!_propertyMappingService.ValidMappingExistsFor<AuthorDto, Author>(authorsResourceParameters.OrderBy))
             {
@@ -130,38 +131,59 @@ namespace Library.API.Controllers
 
             var authorsFromRep = _libraryRepository.GetAuthors(authorsResourceParameters);
 
-            var paginationMetadata = new
-            {
-                totalCount = authorsFromRep.TotalCount,
-                pageSize = authorsFromRep.PageSize,
-                currentPage = authorsFromRep.CurrentPage,
-                totalPages = authorsFromRep.TotalPages
-            };
-
-            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationMetadata));
-
             var authors = Mapper.Map<IEnumerable<AuthorDto>>(authorsFromRep);
 
-            var links = CreateLinksForAuthors(authorsResourceParameters, authorsFromRep.HasNext, authorsFromRep.HasPrevious);
-
-            var shapedAuthors = authors.ShapeData(authorsResourceParameters.Fields);
-            var shapedAuthorsWithLinks = shapedAuthors.Select(i =>
+            if (mediaType == "application/vnd.marvin.hateoas+json")
             {
-                var authorAsDict = i as IDictionary<string, object>;
-                var authorLinks = CreateLinksForAuthor((Guid)authorAsDict["Id"], authorsResourceParameters.Fields);
+                var paginationMetadata = new
+                {
+                    totalCount = authorsFromRep.TotalCount,
+                    pageSize = authorsFromRep.PageSize,
+                    currentPage = authorsFromRep.CurrentPage,
+                    totalPages = authorsFromRep.TotalPages
+                };
 
-                authorAsDict.Add("links", authorLinks);
+                Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationMetadata));
 
-                return authorAsDict;
-            });
+                var links = CreateLinksForAuthors(authorsResourceParameters, authorsFromRep.HasNext, authorsFromRep.HasPrevious);
 
-            var linkedCollectionResource = new
+                var shapedAuthors = authors.ShapeData(authorsResourceParameters.Fields);
+                var shapedAuthorsWithLinks = shapedAuthors.Select(i =>
+                {
+                    var authorAsDict = i as IDictionary<string, object>;
+                    var authorLinks = CreateLinksForAuthor((Guid)authorAsDict["Id"], authorsResourceParameters.Fields);
+
+                    authorAsDict.Add("links", authorLinks);
+
+                    return authorAsDict;
+                });
+
+                var linkedCollectionResource = new
+                {
+                    value = shapedAuthorsWithLinks,
+                    links
+                };
+
+                return Ok(linkedCollectionResource);
+            }
+            else
             {
-                value = shapedAuthorsWithLinks,
-                links
-            };
+                var previousPageLink = authorsFromRep.HasPrevious ? CreateAuthorsResrouceUri(authorsResourceParameters, ResourceUriType.PreviousPage) : null;
+                var nextPageLink = authorsFromRep.HasNext ? CreateAuthorsResrouceUri(authorsResourceParameters, ResourceUriType.NextPage) : null;
 
-            return Ok(linkedCollectionResource);
+                var paginationMetadata = new
+                {
+                    totalCount = authorsFromRep.TotalCount,
+                    pageSize = authorsFromRep.PageSize,
+                    currentPage = authorsFromRep.CurrentPage,
+                    totalPages = authorsFromRep.TotalPages,
+                    previousPageLink,
+                    nextPageLink
+                };
+
+                Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationMetadata));
+                return Ok(authors.ShapeData(authorsResourceParameters.Fields));
+            }
         }
 
         private string CreateAuthorsResrouceUri(

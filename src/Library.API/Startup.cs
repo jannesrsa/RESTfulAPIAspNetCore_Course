@@ -1,4 +1,5 @@
-﻿using Library.API.Entities;
+﻿using System.Linq;
+using Library.API.Entities;
 using Library.API.Helpers;
 using Library.API.Services;
 using Microsoft.AspNetCore.Builder;
@@ -89,6 +90,12 @@ namespace Library.API
                 setupAction.ReturnHttpNotAcceptable = true;
                 setupAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
                 setupAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter(new MvcOptions()));
+
+                var jsonOutputFormatter = setupAction.OutputFormatters.OfType<JsonOutputFormatter>().FirstOrDefault();
+                if (jsonOutputFormatter != null)
+                {
+                    jsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.marvin.hateoas+json");
+                }
             })
             .AddJsonOptions(options =>
             {
