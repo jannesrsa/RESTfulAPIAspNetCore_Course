@@ -43,7 +43,7 @@ namespace Library.API.Controllers
             return NotFound();
         }
 
-        [HttpPost]
+        [HttpPost(Name = "CreateAuthor")]
         public IActionResult CreateAuthor([FromBody] AuthorForCreationDto author)
         {
             if (author == null)
