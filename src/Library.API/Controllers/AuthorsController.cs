@@ -74,6 +74,37 @@ namespace Library.API.Controllers
             );
         }
 
+        [HttpPost(Name = "CreateAuthorWithAuthorForCreationWithDateOfDeathDto")]
+        public IActionResult CreateAuthorWithAuthorForCreationWithDateOfDeathDto([FromBody] AuthorForCreationWithDateOfDeathDto author)
+        {
+            if (author == null)
+            {
+                return BadRequest();
+            }
+
+            var authorEntity = Mapper.Map<Entities.Author>(author);
+
+            _libraryRepository.AddAuthor(authorEntity);
+
+            if (!_libraryRepository.Save())
+            {
+                throw new Exception("Creating an author failed on save.");
+            }
+
+            var authorToReturn = Mapper.Map<AuthorDto>(authorEntity);
+
+            var links = CreateLinksForAuthor(authorEntity.Id, null);
+
+            var linkedResourceToReturn = authorToReturn.ShapeData(null) as IDictionary<string, object>;
+            linkedResourceToReturn.Add("links", links);
+
+            return CreatedAtRoute(
+                "GetAuthor",
+                new { id = linkedResourceToReturn["Id"] },
+                linkedResourceToReturn
+            );
+        }
+
         [HttpDelete("{id}", Name = "DeleteAuthor")]
         public IActionResult DeleteAuthor(Guid id)
         {
