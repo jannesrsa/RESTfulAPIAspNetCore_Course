@@ -24,8 +24,8 @@ namespace Library.API.Controllers
             _urlHelper = urlHelper;
         }
 
-        [HttpPost]
-        public IActionResult CreateBook(Guid authorId, [FromBody] BookForCreationDto bookForCreationDto)
+        [HttpPost(Name = "CreateBookForAuthor")]
+        public IActionResult CreateBookForAuthor(Guid authorId, [FromBody] BookForCreationDto bookForCreationDto)
         {
             if (bookForCreationDto == null)
             {
@@ -199,7 +199,7 @@ namespace Library.API.Controllers
         }
 
         [HttpPut("{id}", Name = "UpdateBook")]
-        public IActionResult UpdateBook(Guid authorId, Guid id, [FromBody] BookForUpdateDto bookForUpdateDto)
+        public IActionResult UpdateBookForAuthor(Guid authorId, Guid id, [FromBody] BookForUpdateDto bookForUpdateDto)
         {
             if (bookForUpdateDto == null)
             {
